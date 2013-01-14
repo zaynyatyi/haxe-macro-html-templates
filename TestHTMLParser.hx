@@ -8,7 +8,7 @@ class TestHTMLParser {
     return macro {
       var r = mw.HTMLTemplate.haml_like_str($template);
       if (r == $expected){
-        Sys.println("ok");
+        Sys.println($nr+" ok");
       } else {
         Sys.println("=== ERROR: "+$nr);
         Sys.println("expected: "+$expected);
@@ -143,7 +143,24 @@ class TestHTMLParser {
     //     =m.bad_method()
     //   %div
     // ", "failure expected");
-      
+
+    test(27, "
+      :switch (test)
+      |case nope
+        %div nope
+      |case test
+        %div test
+    ", "<div>test</div> ");
+    
+    test(28, "
+      :switch (none)
+      |case nope
+        %div nope
+      |case test
+        %div test
+      |default
+        %div default
+    ", "<div>default</div> ");
 
 
     /* expected runtime failure, location should point to d.x.y */

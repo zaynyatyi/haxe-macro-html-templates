@@ -33,6 +33,7 @@ enum ParsedTemplateItem {
   control_for(for_:E, content: TemplateContent);
   
   // case ..
+  control_switch(cond:E, /*cases: Array<TemplateContent>, */default_: TemplateContent);
 }
 typedef TemplateContent = Array<ParsedTemplateItem>;
 // }}}
@@ -404,7 +405,30 @@ class TemplateParser {
       var for_content = [];
       parse_template_items(ii+2, ps, for_content); 
       return control_for(for_, for_content);
-    } else {
+    } else if (is_string('switch')) {
+      //switch
+      ignore_spaces(ps);
+      // todo , pass location of template string
+      //FIXME: just got that from if
+      var cond_expr = parse_haxe_expr(ps);
+      expect_char("\n"); ps.i++;
+      var then_content = [];
+      parse_template_items(ii+2, ps, then_content);
+      var else_content = [];
+      // else branch?
+      var i = ps.i;
+      if (spaces(ii, ps)){
+        if (is_string(":else")){
+          expect_char("\n"); ps.i++;
+          parse_template_items(ii+2, ps, else_content); 
+        } else {
+          // we're done, no else branch
+          ps.i = i;
+        }
+      }
+      //return control_switch(cond_expr, /*cases, */default_); //TODO: make proper worker
+      return control_switch(cond_expr, /*cases, */then_content); //TODO: make proper worker
+    }else {
       // try filter ..
       var filter_name = parse_name_like(ps);
       expect_char("\n"); ps.i++;
@@ -544,6 +568,7 @@ class TemplateParser {
         attrs: Expr -> Expr, // expr is {} or hash, should return expr evaluating to html
         for_: Expr -> Expr -> Expr,
         if_: Expr -> Expr -> Expr -> Expr,
+        switch_: Expr -> Expr -> Expr, //TODO: should be Expr -> Array<Expr> -> Expr -> Expr
         filter: Hash<Expr -> Expr>,
         joinItems: Array<Expr> -> Expr, // this may try to optimize adjecent CString exprs
         quote: Expr -> Expr, // Expr evaluates to str, should return something quoting it
@@ -596,6 +621,8 @@ class TemplateParser {
           r.expr(e.if_(cond, template_content_to_expr(then_, false, e), else_ == null ? null : template_content_to_expr(else_, false, e)));
         case control_for(for_, content ):
           r.expr(e.for_(for_, template_content_to_expr(content, false, e) ));
+        case control_switch(cond, default_): //TODO: add cases array
+          r.expr(e.switch_(cond, default_ == null ? null : template_content_to_expr(default_, false, e))); //TODO: add cases array
       }
     }
     return e.joinItems(r.items);
@@ -664,6 +691,9 @@ class TemplateParser {
                 }
               case _: throw "unexpected "+for_.expr;
             }
+        },
+        switch_: function(cond, default_){ //TODO: add cases array
+          return macro "just a macro test";
         }
 	// EFor( it : Expr, expr : Expr );
     });
