@@ -33,7 +33,7 @@ enum ParsedTemplateItem {
   control_for(for_:E, content: TemplateContent);
   
   // case ..
-  control_switch(cond:E, cases: Array<E>, cases_values: Array<ParsedTemplateItem>, default_: TemplateContent);
+  control_switch(cond:E, cases: Array<{values: Array<E>, case_content: TemplateContent}>, default_: TemplateContent);
 }
 typedef TemplateContent = Array<ParsedTemplateItem>;
 // }}}
@@ -409,25 +409,28 @@ class TemplateParser {
       //switch
       ignore_spaces(ps);
       var cond_expr = parse_haxe_expr(ps);
-      expect_char("\n"); ps.i++;
+      /*expect_char("\n");*/ ps.i++;
       var cases = [];
-      var cases_content = [];
       var default_content = [];
       // cases branch?
       var i = ps.i;
-      while(ps.i != (ps.s.length-1)){
+      while(!eof(ps)){
         if (is_string(":case")){
-          cases.push(parse_haxe_expr(ps));
-          expect_char("\n"); ps.i++;
-          parse_template_items(ii+2, ps, cases_content);
+          var values = [];
+          var case_content = [];
+          values.push(parse_haxe_expr(ps)); //TODO: what if there will be more then one value for expression
+          /*expect_char("\n");*/ ps.i++;
+          parse_template_items(ii+2, ps, case_content);
+          cases.push({values: values, case_content: case_content});
         } else if (is_string(":default")){
-          expect_char("\n"); ps.i++;
+          /*expect_char("\n");*/ ps.i++;
           parse_template_items(ii+2, ps, default_content);
         } else {
           ps.i++;
         }
       }
-      return control_switch(cond_expr, cases, cases_content, default_content);
+      //Sys.println(cases);
+      return control_switch(cond_expr, cases, default_content);
     }else {
       // try filter ..
       var filter_name = parse_name_like(ps);
@@ -568,7 +571,7 @@ class TemplateParser {
         attrs: Expr -> Expr, // expr is {} or hash, should return expr evaluating to html
         for_: Expr -> Expr -> Expr,
         if_: Expr -> Expr -> Expr -> Expr,
-        switch_: Expr -> Array<Expr> -> Array<Expr> -> Expr -> Expr, //TODO: should be Expr -> Array<Expr> -> Expr -> Expr
+        switch_: Expr -> Array<Case> -> Expr -> Expr, //TODO: should be Expr -> Array<Expr> -> Expr -> Expr
         filter: Hash<Expr -> Expr>,
         joinItems: Array<Expr> -> Expr, // this may try to optimize adjecent CString exprs
         quote: Expr -> Expr, // Expr evaluates to str, should return something quoting it
@@ -621,17 +624,16 @@ class TemplateParser {
           r.expr(e.if_(cond, template_content_to_expr(then_, false, e), else_ == null ? null : template_content_to_expr(else_, false, e)));
         case control_for(for_, content ):
           r.expr(e.for_(for_, template_content_to_expr(content, false, e) ));
-        case control_switch(cond, cases, cases_values, default_):
-          //Sys.println(cases_values);
+        case control_switch(cond, cases, default_):
+          //Sys.println(cases);
           //Sys.println("----------");
-          var cases_values_expr = [];
-          for(value in cases_values){
-            cases_values_expr.push(template_content_to_expr([value], false, e));
+          var cases_expr = [];
+          for(item in cases){
+            //cases_values_expr.push(template_content_to_expr([value], false, e));
+            var case_:Case = {values: item.values, expr: template_content_to_expr(item.case_content, false, e)};
+            cases_expr.push(case_);
           }
-          r.expr(e.switch_(cond, cases,
-                      /*template_content_to_expr(cases_values, false, e),*/
-                      cases_values_expr,
-                      default_ == null ? null : template_content_to_expr(default_, false, e)));
+          r.expr(e.switch_(cond, cases_expr, default_ == null ? null : template_content_to_expr(default_, false, e)));
       }
     }
     return e.joinItems(r.items);
@@ -701,9 +703,11 @@ class TemplateParser {
               case _: throw "unexpected "+for_.expr;
             }
         },
-        switch_: function(cond, cases, cases_values, default_){
+        switch_: function(cond, cases, default_){
           var def = default_ == null ? (macro "") : default_;
-          var i = 0;
+          var e = {pos: Context.currentPos(), expr: ESwitch(cond, cases, default_)};
+          return e;
+          /*var i = 0;
           var condStr = null;
           switch( cond.expr ) {
             case EConst(c):
@@ -713,7 +717,7 @@ class TemplateParser {
               }
             default:
           };
-          for(case_ in cases){
+          for(case_ in cases){ //TODO: make ESwitch
               var caseStr = null;
               switch( case_.expr ) {
                 case EConst(c):
@@ -724,12 +728,12 @@ class TemplateParser {
                 default:
               };
               if(condStr == caseStr){
-                var tmp_expr = cases_values[i]; //TODO: remove tmp_expr
-                return macro $tmp_expr;
+                var tmp_expr = cases_values[i];
+                return tmp_expr;
               }
               i++;
-          }
-          return macro $default_;
+          }*/
+          return default_;
         }
 	// EFor( it : Expr, expr : Expr );
     });

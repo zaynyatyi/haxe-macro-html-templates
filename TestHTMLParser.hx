@@ -151,14 +151,65 @@ class TestHTMLParser {
       :case \"second\"
         %div second_text
     ", "<div>first_text</div> ");
-    
+
     test(28, "
+      :switch \"first\"
+      :case \"first\"
+        %div first_text
+      :case \"second\"
+        %div second_text
+    ", "<div>first_text</div> ");
+
+    test(29, "
       :switch \"none\"
       :case \"first\"
         %div first_text
       :default
         %div default_text
     ", "<div>default_text</div> ");
+
+    test(30, "
+      :switch \"none\"
+        %div first_text
+      :default
+        %div default_text
+    ", "failure expected");
+
+    test(31, "
+      :switch \"none\"
+        %div first_text
+        %div repeated_text
+      :default
+        %div default_text
+    ", "<div>first_text</div> <div>repeated_text</div> ");
+
+    test(32, "
+      :switch \"second\"
+      :case \"first\"
+      :case \"second\"
+        %div just_text
+      :default
+        %div default_text
+    ", "<div>just_text</div> ");
+
+    test(33, "
+      :switch \"first\"
+      :case \"first\"
+      :case \"second\"
+        %div just_text
+      :default
+        %div default_text
+    ", "<div>just_text</div> ");
+
+//TODO: check this test
+/*  var value = "val";
+    test(33, "
+      :switch value
+      :case \"val\"
+        %div val_text
+      :default
+        %div default_text
+    ", "<div>just_text</div> ");*/
 
 
     /* expected runtime failure, location should point to d.x.y */
