@@ -145,22 +145,20 @@ class TestHTMLParser {
     // ", "failure expected");
 
     test(27, "
-      :switch (test)
-      |case nope
-        %div nope
-      |case test
-        %div test
-    ", "<div>test</div> ");
+      :switch (first)
+      :case first
+        %div first_text
+      :case second
+        %div second_text
+    ", "<div>first_text</div> ");
     
     test(28, "
       :switch (none)
-      |case nope
-        %div nope
-      |case test
-        %div test
-      |default
-        %div default
-    ", "<div>default</div> ");
+      :case first
+        %div first_text
+      :default
+        %div default_text
+    ", "<div>default_text</div> ");
 
 
     /* expected runtime failure, location should point to d.x.y */
