@@ -568,7 +568,7 @@ class TemplateParser {
         attrs: Expr -> Expr, // expr is {} or hash, should return expr evaluating to html
         for_: Expr -> Expr -> Expr,
         if_: Expr -> Expr -> Expr -> Expr,
-        switch_: Expr -> Array<Expr> -> Expr -> Expr -> Expr, //TODO: should be Expr -> Array<Expr> -> Expr -> Expr
+        switch_: Expr -> Array<Expr> -> Array<Expr> -> Expr -> Expr, //TODO: should be Expr -> Array<Expr> -> Expr -> Expr
         filter: Hash<Expr -> Expr>,
         joinItems: Array<Expr> -> Expr, // this may try to optimize adjecent CString exprs
         quote: Expr -> Expr, // Expr evaluates to str, should return something quoting it
@@ -622,8 +622,15 @@ class TemplateParser {
         case control_for(for_, content ):
           r.expr(e.for_(for_, template_content_to_expr(content, false, e) ));
         case control_switch(cond, cases, cases_values, default_):
+          //Sys.println(cases_values);
+          //Sys.println("----------");
+          var cases_values_expr = [];
+          for(value in cases_values){
+            cases_values_expr.push(template_content_to_expr([value], false, e));
+          }
           r.expr(e.switch_(cond, cases,
-                      template_content_to_expr(cases_values, false, e),
+                      /*template_content_to_expr(cases_values, false, e),*/
+                      cases_values_expr,
                       default_ == null ? null : template_content_to_expr(default_, false, e)));
       }
     }
@@ -717,12 +724,11 @@ class TemplateParser {
                 default:
               };
               if(condStr == caseStr){
-                Sys.println(cases_values);
-                return macro $cases_values[i];
+                var tmp_expr = cases_values[i]; //TODO: remove tmp_expr
+                return macro $tmp_expr;
               }
               i++;
           }
-          //TODO: check equals candition and cases
           return macro $default_;
         }
 	// EFor( it : Expr, expr : Expr );
