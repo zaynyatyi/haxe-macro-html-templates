@@ -697,26 +697,32 @@ class TemplateParser {
         switch_: function(cond, cases, cases_values, default_){
           var def = default_ == null ? (macro "") : default_;
           var i = 0;
-          //var equal = false;
+          var condStr = null;
+          switch( cond.expr ) {
+            case EConst(c):
+              switch( c ) {
+                case CString(s): condStr = s;
+                default:
+              }
+            default:
+          };
           for(case_ in cases){
-              
-              //Sys.println(EParenthesis(case_));
-              Sys.println(macro $cond + " ++++ " + macro $case_);
-              //if(cond.expr == case_.expr)
-              //{
-              //  //equal = true;
-              //  Sys.println("equals");
-              //  return macro $cases_values[i];
-              //  //break;
-              //}
-              //i++;
+              var caseStr = null;
+              switch( case_.expr ) {
+                case EConst(c):
+                  switch( c ) {
+                    case CString(s): caseStr = s;
+                    default:
+                  }
+                default:
+              };
+              if(condStr == caseStr){
+                Sys.println(cases_values);
+                return macro $cases_values[i];
+              }
+              i++;
           }
           //TODO: check equals candition and cases
-          //Sys.println("cond --" + cond);
-          //Sys.println("cases --" + cases);
-          //Sys.println("cases values --" + cases_values);
-          //Sys.println("default --" + default_);
-          //Sys.println("-----------------------");
           return macro $default_;
         }
 	// EFor( it : Expr, expr : Expr );
@@ -725,7 +731,6 @@ class TemplateParser {
     return expr;
   }
 #end
-
 }
 
 /*
