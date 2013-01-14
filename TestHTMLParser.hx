@@ -145,7 +145,7 @@ class TestHTMLParser {
     // ", "failure expected");
 
     test(27, "
-      :switch (first)
+      :switch first
       :case first
         %div first_text
       :case second
@@ -153,7 +153,7 @@ class TestHTMLParser {
     ", "<div>first_text</div> ");
     
     test(28, "
-      :switch (none)
+      :switch none
       :case first
         %div first_text
       :default

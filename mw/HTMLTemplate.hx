@@ -427,7 +427,7 @@ class TemplateParser {
           ps.i++;
         }
       }
-      return control_switch(cond_expr, cases, cases_content, default_content); //TODO: make proper worker
+      return control_switch(cond_expr, cases, cases_content, default_content);
     }else {
       // try filter ..
       var filter_name = parse_name_like(ps);
@@ -622,11 +622,6 @@ class TemplateParser {
         case control_for(for_, content ):
           r.expr(e.for_(for_, template_content_to_expr(content, false, e) ));
         case control_switch(cond, cases, cases_values, default_):
-          //var cases_values_e = [];
-          //for(cases_value in cases_values)
-          //{
-          //  cases_values_e = template_content_to_expr(cases_values, false, e);
-          //}
           r.expr(e.switch_(cond, cases,
                       template_content_to_expr(cases_values, false, e),
                       default_ == null ? null : template_content_to_expr(default_, false, e)));
@@ -701,6 +696,21 @@ class TemplateParser {
         },
         switch_: function(cond, cases, cases_values, default_){
           var def = default_ == null ? (macro "") : default_;
+          var i = 0;
+          //var equal = false;
+          for(case_ in cases){
+              
+              //Sys.println(EParenthesis(case_));
+              Sys.println(macro $cond + " ++++ " + macro $case_);
+              //if(cond.expr == case_.expr)
+              //{
+              //  //equal = true;
+              //  Sys.println("equals");
+              //  return macro $cases_values[i];
+              //  //break;
+              //}
+              //i++;
+          }
           //TODO: check equals candition and cases
           //Sys.println("cond --" + cond);
           //Sys.println("cases --" + cases);
